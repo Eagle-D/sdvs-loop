@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#SDVS_ Loop Player</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: black; 
+        }
+        video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* Cambia a 'contain' si no quieres que se recorte nada */
+        }
+    </style>
+</head>
+<body>
+    <video id="sdvsVideo" autoplay loop muted playsinline>
+        <source src="homieTest.mp4" type="video/mp4">
+        Tu TV no soporta el formato de vídeo.
+    </video>
+
+    <script>
+        // Forzamos el inicio por si la TV entra en modo ahorro
+        window.onload = function() {
+            const v = document.getElementById('sdvsVideo');
+            v.play();
+        };
+    </script>
+</body>
+</html>
