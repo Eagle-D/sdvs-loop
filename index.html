@@ -1,32 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Panel de Control #SDVS_</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control SDVS - Cartelería</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; text-align: center; }
-        .video-item { border: 1px solid #333; padding: 15px; margin: 10px; display: inline-block; border-radius: 8px; width: 200px; }
-        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
+        h1 { font-weight: 300; letter-spacing: 2px; color: var(--accent); }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* Galería de Vídeos */
+        .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 40px; }
+        .video-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #334155; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; }
+        .video-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .video-card h3 { margin: 10px 0; font-size: 1.2rem; }
+        .video-card p { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; }
+        
+        /* Botones */
+        .btn-launch { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: opacity 0.2s; }
+        .btn-launch:hover { opacity: 0.9; }
+        
+        /* Estado */
+        #status-bar { position: fixed; bottom: 20px; right: 20px; background: #059669; color: white; padding: 10px 20px; border-radius: 30px; display: none; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-    <h1>🎬 Galería de Contenidos SDVS</h1>
-    
-    <div class="video-item">
-        <h3>Promo Principal</h3>
-        <button onclick="lanzar('promo.mp4')">PROYECTAR EN TV</button>
+
+    <div class="container">
+        <h1>#SDVS_ CONTENT HUB</h1>
+        <p>Selecciona el contenido para desplegar en la televisión remota</p>
+
+        <div class="gallery" id="videoGallery">
+            <div class="video-card">
+                <h3>Promo Principal</h3>
+                <p>Bucle estándar de servicios SDVS</p>
+                <button class="btn-launch" onclick="lanzar('promo.mp4')">LANZAR A TV</button>
+            </div>
+
+            <div class="video-card">
+                <h3>Loop Corporativo</h3>
+                <p>Logotipos y animaciones de marca</p>
+                <button class="btn-launch" onclick="lanzar('loop.mp4')">LANZAR A TV</button>
+            </div>
+
+            <div class="video-card" style="border-style: dashed; opacity: 0.7;">
+                <h3>Añadir Nuevo</h3>
+                <p>Sube el MP4 al repo y edita este HTML</p>
+                <button class="btn-launch" style="background: #475569;" disabled>CONFIGURAR</button>
+            </div>
+        </div>
     </div>
 
+    <div id="status-bar">Comando enviado con éxito...</div>
+
     <script>
-        function lanzar(archivo) {
-            const urlCompleta = "https://eagle-d.github.io/sdvs-loop/" + archivo;
+        function lanzar(nombreArchivo) {
+            const urlCompleta = `https://eagle-d.github.io/sdvs-loop/${nombreArchivo}`;
             
-            // Si estamos dentro de la App de Electron, enviamos la orden a la maquinaria
-            if (window.require) {
-                const { ipcRenderer } = window.require('electron');
-                ipcRenderer.send('trigger-tv-launch', urlCompleta);
+            // Verificamos si la página está corriendo dentro de tu App de Electron
+            if (window.ipcRenderer) {
+                // Enviamos la URL a la 'maquinaria' de la App local
+                window.ipcRenderer.send('trigger-tv-launch', urlCompleta);
+                mostrarEstado();
             } else {
-                alert("Debes usar la App de escritorio para lanzar a la TV.");
+                alert("⚠️ ACCIÓN BLOQUEADA: Debes usar la aplicación de escritorio 'SDVS Remote' para controlar el hardware de la oficina.");
             }
+        }
+
+        function mostrarEstado() {
+            const bar = document.getElementById('status-bar');
+            bar.style.display = 'block';
+            setTimeout(() => { bar.style.display = 'none'; }, 3000);
         }
     </script>
 </body>
