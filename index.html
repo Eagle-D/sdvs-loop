@@ -74,5 +74,32 @@
             setTimeout(() => { bar.style.display = 'none'; }, 3000);
         }
     </script>
+
+    <div style="margin-top: 50px; padding: 30px; border: 2px dashed #3b82f6; border-radius: 15px; background: #1e293b;">
+    <h2>Optimizar Vídeo para SDVS</h2>
+    <p>Si tu vídeo pesa mucho, arrástralo aquí antes de subirlo a GitHub.</p>
+    <input type="file" id="fileOptimizer" style="display: none;">
+    <button onclick="document.getElementById('fileOptimizer').click()" style="background: #3b82f6;">SELECCIONAR ARCHIVO LOCAL</button>
+    <p id="optStatus" style="color: #60a5fa; margin-top: 10px;"></p>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileOptimizer');
+    const status = document.getElementById('optStatus');
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file && window.ipcRenderer) {
+            // Enviamos la ruta del archivo real a la maquinaria de la App
+            window.ipcRenderer.send('optimize-video', file.path);
+        }
+    };
+
+    if (window.ipcRenderer) {
+        window.ipcRenderer.on('optimization-status', (event, msg) => {
+            status.innerText = msg;
+        });
+    }
+</script>
 </body>
 </html>
