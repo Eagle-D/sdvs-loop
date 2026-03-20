@@ -1,36 +1,33 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>#SDVS_ Loop Player</title>
+    <title>Panel de Control #SDVS_</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            background-color: black; 
-        }
-        video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover; /* Cambia a 'contain' si no quieres que se recorte nada */
-        }
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; text-align: center; }
+        .video-item { border: 1px solid #333; padding: 15px; margin: 10px; display: inline-block; border-radius: 8px; width: 200px; }
+        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
-    <video id="sdvsVideo" autoplay loop muted playsinline>
-        <source src="homieTest.mp4" type="video/mp4">
-        Tu TV no soporta el formato de vídeo.
-    </video>
+    <h1>🎬 Galería de Contenidos Inmersia</h1>
+    
+    <div class="video-item">
+        <h3>Promo Principal</h3>
+        <button onclick="lanzar('promo.mp4')">PROYECTAR EN TV</button>
+    </div>
 
     <script>
-        // Forzamos el inicio por si la TV entra en modo ahorro
-        window.onload = function() {
-            const v = document.getElementById('sdvsVideo');
-            v.play();
-        };
+        function lanzar(archivo) {
+            const urlCompleta = "https://eagle-d.github.io/sdvs-loop/" + archivo;
+            
+            // Si estamos dentro de la App de Electron, enviamos la orden a la maquinaria
+            if (window.require) {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('trigger-tv-launch', urlCompleta);
+            } else {
+                alert("Debes usar la App de escritorio para lanzar a la TV.");
+            }
+        }
     </script>
 </body>
 </html>
