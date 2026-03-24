@@ -44,11 +44,22 @@
                 <button class="btn-launch" onclick="lanzar('loop.mp4')">LANZAR A TV</button>
             </div>
 
-            <div class="video-card" style="border-style: dashed; opacity: 0.7;">
+            <div class="video-card">
                 <h3>Añadir Nuevo</h3>
-                <p>Sube el MP4 al repo y edita este HTML</p>
-                <button class="btn-launch" style="background: #475569;" disabled>CONFIGURAR</button>
+                <p>Sube el MP4 optimizado al repo</p>
+                <button class="btn-launch" style="background: #475569;" onclick="abrirRepo()">CONFIGURAR / SUBIR</button>
             </div>
+            
+            <script>
+                function abrirRepo() {
+                    if (window.ipcRenderer) {
+                        // Le pedimos a la App que abra el navegador del sistema
+                        window.ipcRenderer.send('open-external-url', 'https://github.com/Eagle-D/sdvs-loop/upload/main');
+                    } else {
+                        window.open('https://github.com/Eagle-D/sdvs-loop/upload/main', '_blank');
+                    }
+                }
+            </script>
         </div>
     </div>
 
@@ -75,29 +86,42 @@
         }
     </script>
 
-    <div style="margin-top: 50px; padding: 30px; border: 2px dashed #3b82f6; border-radius: 15px; background: #1e293b;">
-    <h2>Optimizar Vídeo para SDVS</h2>
-    <p>Si tu vídeo pesa mucho, arrástralo aquí antes de subirlo a GitHub.</p>
+<div id="drop-area" style="border: 2px dashed #3b82f6; padding: 20px; border-radius: 10px; background: #1e293b; margin-top: 20px;">
+    <h3>Optimizar Vídeo para SDVS</h3>
+    <p id="optStatus">Arrastra un archivo o haz clic abajo</p>
     <input type="file" id="fileOptimizer" style="display: none;">
-    <button onclick="document.getElementById('fileOptimizer').click()" style="background: #3b82f6;">SELECCIONAR ARCHIVO LOCAL</button>
-    <p id="optStatus" style="color: #60a5fa; margin-top: 10px;"></p>
+    <button onclick="document.getElementById('fileOptimizer').click()">SELECCIONAR VÍDEO</button>
+    
+    <div id="progressContainer" style="width: 100%; background: #334155; height: 10px; margin-top: 10px; display: none; border-radius: 5px; overflow: hidden;">
+        <div id="progressBar" style="width: 0%; height: 100%; background: #10b981; transition: width 0.3s;"></div>
+    </div>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileOptimizer');
     const status = document.getElementById('optStatus');
+    const pContainer = document.getElementById('progressContainer');
+    const pBar = document.getElementById('progressBar');
 
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file && window.ipcRenderer) {
-            // Enviamos la ruta del archivo real a la maquinaria de la App
+            status.innerText = "Enviando a la maquinaria...";
+            pContainer.style.display = "block";
+            pBar.style.width = "10%";
+            // Enviamos la ruta absoluta del archivo (file.path solo existe en Electron)
             window.ipcRenderer.send('optimize-video', file.path);
         }
     };
 
+    // Escuchar el progreso real desde main.js
     if (window.ipcRenderer) {
-        window.ipcRenderer.on('optimization-status', (event, msg) => {
-            status.innerText = msg;
+        window.ipcRenderer.on('optimization-status', (event, data) => {
+            // data puede ser un string o un objeto con el %
+            if (typeof data === 'string') {
+                status.innerText = data;
+                if (data.includes("¡Hecho!")) pBar.style.width = "100%";
+            }
         });
     }
 </script>
