@@ -7,18 +7,11 @@
         :root { --primary: #3b82f6; --bg: #111827; --card: #1f2937; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 40px; text-align: center; }
         .main-card { background: var(--card); max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px; border: 1px solid #374151; }
-        
-        /* Selector de archivo */
         .video-selector { margin: 25px 0; }
-        select, input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #4b5563; background: #374151; color: white; margin-bottom: 10px; }
-        
-        /* Botones de acción */
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #4b5563; background: #374151; color: white; margin-bottom: 10px; box-sizing: border-box; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-secondary { background: #4b5563; color: white; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Barra de progreso */
         #progressContainer { width: 100%; background: #374151; height: 10px; border-radius: 5px; margin: 15px 0; display: none; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: #10b981; transition: 0.3s; }
     </style>
@@ -53,44 +46,50 @@
     </div>
 
     <script>
+        // Capturamos el ipcRenderer de Electron si estamos en la App
+        let ipc;
+        try {
+            ipc = window.require('electron').ipcRenderer;
+        } catch (e) {
+            console.log("No estamos en la App de Electron");
+        }
+
         const localFile = document.getElementById('localFile');
         const optStatus = document.getElementById('optStatus');
         const pContainer = document.getElementById('progressContainer');
         const pBar = document.getElementById('progressBar');
 
-        // Lógica de Optimización
         localFile.onchange = (e) => {
             const file = e.target.files[0];
-            if (file && window.ipcRenderer) {
+            if (file && ipc) {
                 pContainer.style.display = 'block';
-                window.ipcRenderer.send('optimize-video', file.path);
+                // Usamos file.path que es la ruta real en Electron
+                ipc.send('optimize-video', file.path);
             }
         };
 
-        if (window.ipcRenderer) {
-            window.ipcRenderer.on('optimization-status', (event, data) => {
+        if (ipc) {
+            ipc.on('optimization-status', (event, data) => {
                 optStatus.innerText = data.msg;
                 pBar.style.width = data.progress + '%';
-                if (data.progress >= 100) setTimeout(() => pContainer.style.display = 'none', 3000);
+                if (data.progress >= 100) setTimeout(() => pContainer.style.display = 'none', 5000);
             });
         }
 
-        // Lógica de Subida
         function abrirSubida() {
             const url = 'https://github.com/Eagle-D/sdvs-loop/upload/main';
-            if (window.ipcRenderer) window.ipcRenderer.send('open-external-url', url);
+            if (ipc) ipc.send('open-external-url', url);
             else window.open(url, '_blank');
         }
 
-        // Lógica de Lanzamiento
         function lanzarATV() {
             const name = document.getElementById('remoteFileName').value.trim();
-            if (!name) return alert("Escribe el nombre del vídeo subido.");
+            if (!name) return alert("Escribe el nombre del vídeo.");
             const url = "https://eagle-d.github.io/sdvs-loop/" + name;
             
-            if (window.ipcRenderer) {
-                window.ipcRenderer.send('trigger-tv-launch', url);
-                alert("Orden enviada a la TV para el video: " + name);
+            if (ipc) {
+                ipc.send('trigger-tv-launch', url);
+                alert("Orden enviada a la TV para: " + name);
             } else {
                 alert("Usa la App para lanzar.");
             }
