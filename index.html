@@ -46,54 +46,51 @@
     </div>
 
     <script>
-        // Capturamos el ipcRenderer de Electron si estamos en la App
-        let ipc;
-        try {
-            ipc = window.require('electron').ipcRenderer;
-        } catch (e) {
-            console.log("No estamos en la App de Electron");
+    const localFile = document.getElementById('localFile');
+    const optStatus = document.getElementById('optStatus');
+    const pContainer = document.getElementById('progressContainer');
+    const pBar = document.getElementById('progressBar');
+
+    // Usamos el puente seguro que definimos en preload.js
+    const api = window.electronAPI;
+
+    localFile.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file && api) {
+            pContainer.style.display = 'block';
+            optStatus.innerText = "Iniciando optimización...";
+            // file.path funciona en Electron incluso con seguridad alta
+            api.send('optimize-video', file.path);
         }
+    };
 
-        const localFile = document.getElementById('localFile');
-        const optStatus = document.getElementById('optStatus');
-        const pContainer = document.getElementById('progressContainer');
-        const pBar = document.getElementById('progressBar');
-
-        localFile.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file && ipc) {
-                pContainer.style.display = 'block';
-                // Usamos file.path que es la ruta real en Electron
-                ipc.send('optimize-video', file.path);
-            }
-        };
-
-        if (ipc) {
-            ipc.on('optimization-status', (event, data) => {
-                optStatus.innerText = data.msg;
-                pBar.style.width = data.progress + '%';
-                if (data.progress >= 100) setTimeout(() => pContainer.style.display = 'none', 5000);
-            });
-        }
-
-        function abrirSubida() {
-            const url = 'https://github.com/Eagle-D/sdvs-loop/upload/main';
-            if (ipc) ipc.send('open-external-url', url);
-            else window.open(url, '_blank');
-        }
-
-        function lanzarATV() {
-            const name = document.getElementById('remoteFileName').value.trim();
-            if (!name) return alert("Escribe el nombre del vídeo.");
-            const url = "https://eagle-d.github.io/sdvs-loop/" + name;
+    if (api) {
+        api.on('optimization-status', (data) => {
+            // Manejamos si data es un string o un objeto
+            const message = typeof data === 'string' ? data : data.msg;
+            const percentage = typeof data === 'object' ? data.progress : parseInt(message.replace(/\D/g, '')) || 0;
             
-            if (ipc) {
-                ipc.send('trigger-tv-launch', url);
-                alert("Orden enviada a la TV para: " + name);
-            } else {
-                alert("Usa la App para lanzar.");
+            optStatus.innerText = message;
+            pBar.style.width = percentage + '%';
+            
+            if (percentage >= 100) {
+                setTimeout(() => { pContainer.style.display = 'none'; }, 5000);
             }
-        }
-    </script>
+        });
+    }
+
+    function abrirSubida() {
+        const url = 'https://github.com/Eagle-D/sdvs-loop/upload/main';
+        if (api) api.send('open-external-url', url);
+        else window.open(url, '_blank');
+    }
+
+    function lanzarATV() {
+        const name = document.getElementById('remoteFileName').value.trim();
+        if (!name) return alert("Escribe el nombre del vídeo.");
+        const url = "https://eagle-d.github.io/sdvs-loop/" + name;
+        if (api) api.send('trigger-tv-launch', url);
+    }
+</script>
 </body>
 </html>
