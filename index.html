@@ -56,16 +56,23 @@
 
     localFile.onchange = (e) => {
         const file = e.target.files[0];
+        
+        // Debug para ti: Abre la consola (Ctrl+Shift+I) en la App y verás esto
+        console.log("Archivo seleccionado:", file);
+    
         if (file && api) {
-            // En Electron, el objeto file tiene la propiedad .path con la ruta real del disco
-            const pathReal = file.path; 
+            // En Electron, si 'contextIsolation' está activo, 
+            // a veces hay que usar esta propiedad específica:
+            const rutaFinal = file.path || (file.webkitRelativePath ? file.webkitRelativePath : null);
             
-            if (pathReal) {
+            if (rutaFinal) {
                 pContainer.style.display = 'block';
                 optStatus.innerText = "Iniciando optimización...";
-                api.send('optimize-video', pathReal);
+                api.send('optimize-video', rutaFinal);
             } else {
-                alert("Error: No se puede acceder a la ruta del archivo. Intenta arrastrar el archivo directamente si es posible.");
+                // Si sigue llegando undefined, usamos un truco de Electron:
+                // Le pasamos el nombre y que el main.js lo busque (o lo pida de nuevo)
+                alert("Error de seguridad de ruta. Intenta arrastrar el archivo directamente al botón.");
             }
         }
     };
