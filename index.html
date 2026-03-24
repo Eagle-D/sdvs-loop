@@ -57,10 +57,16 @@
     localFile.onchange = (e) => {
         const file = e.target.files[0];
         if (file && api) {
-            pContainer.style.display = 'block';
-            optStatus.innerText = "Iniciando optimización...";
-            // file.path funciona en Electron incluso con seguridad alta
-            api.send('optimize-video', file.path);
+            // En Electron, el objeto file tiene la propiedad .path con la ruta real del disco
+            const pathReal = file.path; 
+            
+            if (pathReal) {
+                pContainer.style.display = 'block';
+                optStatus.innerText = "Iniciando optimización...";
+                api.send('optimize-video', pathReal);
+            } else {
+                alert("Error: No se puede acceder a la ruta del archivo. Intenta arrastrar el archivo directamente si es posible.");
+            }
         }
     };
 
