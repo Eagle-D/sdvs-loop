@@ -45,59 +45,36 @@
         </div>
     </div>
 
-    <script>
-    const localFile = document.getElementById('localFile');
+<script>
     const optStatus = document.getElementById('optStatus');
     const pContainer = document.getElementById('progressContainer');
     const pBar = document.getElementById('progressBar');
-
-    // Usamos el puente seguro que definimos en preload.js
     const api = window.electronAPI;
 
-    localFile.onchange = (e) => {
-        const file = e.target.files[0];
-        
-        // Debug para ti: Abre la consola (Ctrl+Shift+I) en la App y verás esto
-        console.log("Archivo seleccionado:", file);
-    
-        if (file && api) {
-            // En Electron, si 'contextIsolation' está activo, 
-            // a veces hay que usar esta propiedad específica:
-            const rutaFinal = file.path || (file.webkitRelativePath ? file.webkitRelativePath : null);
-            
-            if (rutaFinal) {
-                pContainer.style.display = 'block';
-                optStatus.innerText = "Iniciando optimización...";
-                api.send('optimize-video', rutaFinal);
-            } else {
-                // Si sigue llegando undefined, usamos un truco de Electron:
-                // Le pasamos el nombre y que el main.js lo busque (o lo pida de nuevo)
-                alert("Error de seguridad de ruta. Intenta arrastrar el archivo directamente al botón.");
-            }
+    // Esta función ahora solo da la orden de abrir el selector nativo
+    function iniciarOptimizacion() {
+        if (api) {
+            pContainer.style.display = 'block';
+            optStatus.innerText = "Selecciona un archivo en la ventana emergente...";
+            api.send('optimize-video'); // No enviamos nada, la App elegirá
+        } else {
+            alert("Usa la App para optimizar vídeos.");
         }
-    };
+    }
 
     if (api) {
         api.on('optimization-status', (data) => {
-            // Manejamos si data es un string o un objeto
-            const message = typeof data === 'string' ? data : data.msg;
-            const percentage = typeof data === 'object' ? data.progress : parseInt(message.replace(/\D/g, '')) || 0;
-            
-            optStatus.innerText = message;
-            pBar.style.width = percentage + '%';
-            
-            if (percentage >= 100) {
-                setTimeout(() => { pContainer.style.display = 'none'; }, 5000);
-            }
+            optStatus.innerText = data.msg;
+            pBar.style.width = data.progress + '%';
+            if (data.progress >= 100) setTimeout(() => pContainer.style.display = 'none', 5000);
         });
     }
 
+    // El resto de funciones (abrirSubida, lanzarATV) se quedan igual...
     function abrirSubida() {
         const url = 'https://github.com/Eagle-D/sdvs-loop/upload/main';
         if (api) api.send('open-external-url', url);
-        else window.open(url, '_blank');
     }
-
     function lanzarATV() {
         const name = document.getElementById('remoteFileName').value.trim();
         if (!name) return alert("Escribe el nombre del vídeo.");
