@@ -53,12 +53,12 @@
 
     // Esta función ahora solo da la orden de abrir el selector nativo
     function iniciarOptimizacion() {
-        if (api) {
-            pContainer.style.display = 'block';
-            optStatus.innerText = "Selecciona un archivo en la ventana emergente...";
-            api.send('optimize-video'); // No enviamos nada, la App elegirá
+        console.log(" [UI-DEBUG] Botón pulsado");
+        if (window.electronAPI) {
+            console.log(" [UI-DEBUG] Enviando 'optimize-video' a través del Bridge...");
+            window.electronAPI.send('optimize-video');
         } else {
-            alert("Usa la App para optimizar vídeos.");
+            console.error(" [UI-DEBUG] ERROR: 'window.electronAPI' no existe. El Preload falló.");
         }
     }
 
